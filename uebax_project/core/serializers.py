@@ -1,8 +1,10 @@
-# Em: core/serializers.py
 from rest_framework import serializers
 from .models import Usuario, ResetPasswordToken
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from .utils import log_event
+from .models import Evento
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     
@@ -188,3 +190,37 @@ class LogoutSerializer(serializers.Serializer):
             # o .blacklist() dará um erro. Nós o "ignoramos",
             # pois o usuário já está efetivamente deslogado.
             self.fail('bad_token')
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Serializer de Login customizado para registrar o evento de login.
+    """
+
+    @classmethod
+    def get_token(cls, user):
+        # Este método já existe, nós apenas o chamamos
+        token = super().get_token(user)
+
+        # Você pode adicionar "payloads" customizados ao token aqui, se quiser
+        # ex: token['nome_completo'] = user.nome_completo
+
+        return token
+
+    def validate(self, attrs):
+        # 'validate' é chamado DEPOIS que o simple-jwt
+        # já validou que o email e a senha estão corretos.
+
+        # 1. Roda a validação padrão (que nos dá os tokens 'access' e 'refresh')
+        data = super().validate(attrs)
+
+        # 2. Pega o usuário que acabou de ser validado (self.user)
+        #    e chama nosso "Motor de Eventos"
+        #    O 'self.user' é magicamente definido pelo 'super().validate()'
+        if self.user:
+            log_event(
+                usuario=self.user,
+                tipo_evento=Evento.TipoEvento.LOGIN
+            )
+
+        # 3. Retorna os tokens para o usuário, como de costume
+        return data

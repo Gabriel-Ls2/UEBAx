@@ -3,10 +3,11 @@ from django.shortcuts import render
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .serializers import UserRegistrationSerializer, PasswordResetRequestSerializer, PasswordResetVerifySerializer, PasswordResetConfirmSerializer, LogoutSerializer
+from .serializers import UserRegistrationSerializer, PasswordResetRequestSerializer, PasswordResetVerifySerializer, PasswordResetConfirmSerializer, LogoutSerializer, CustomTokenObtainPairSerializer
 from .models import Usuario, ResetPasswordToken
 from django.core.mail import send_mail
 from django.conf import settings
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 class UserRegistrationView(generics.CreateAPIView):
     """
@@ -162,3 +163,11 @@ class LogoutView(generics.GenericAPIView):
             {"message": "Logout com Sucesso!"}, 
             status=status.HTTP_200_OK
         )
+    
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """
+    View de Login customizada.
+    A única mudança é dizer ao simple-jwt para usar nosso
+    serializer customizado (que registra o log).
+    """
+    serializer_class = CustomTokenObtainPairSerializer
