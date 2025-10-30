@@ -2,8 +2,8 @@ from django.shortcuts import render
 # Em: core/views.py
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from .serializers import UserRegistrationSerializer, PasswordResetRequestSerializer, PasswordResetVerifySerializer, PasswordResetConfirmSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from .serializers import UserRegistrationSerializer, PasswordResetRequestSerializer, PasswordResetVerifySerializer, PasswordResetConfirmSerializer, LogoutSerializer
 from .models import Usuario, ResetPasswordToken
 from django.core.mail import send_mail
 from django.conf import settings
@@ -136,3 +136,29 @@ class PasswordResetConfirmView(generics.GenericAPIView):
         
         # Retorna erros (Ex: "Token Inválido", "As senhas não coincidem", etc.)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LogoutView(generics.GenericAPIView):
+    """
+    View para a "Tela de Sair" (Botão Sair).
+    Exige que o usuário esteja autenticado.
+    """
+    serializer_class = LogoutSerializer
+
+    # Pela primeira vez, definimos que esta view SÓ
+    # pode ser acessada por usuários logados (autenticados).
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+
+        # Valida os dados (basicamente, checa se 'refresh' foi enviado)
+        serializer.is_valid(raise_exception=True)
+
+        # Chama o método .save() do nosso serializer (que faz o blacklist)
+        serializer.save()
+
+        # Sua mensagem de sucesso da especificação!
+        return Response(
+            {"message": "Logout com Sucesso!"}, 
+            status=status.HTTP_200_OK
+        )

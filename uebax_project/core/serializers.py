@@ -2,6 +2,7 @@
 from rest_framework import serializers
 from .models import Usuario, ResetPasswordToken
 from django.contrib.auth.password_validation import validate_password
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     
@@ -161,3 +162,29 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
         # 2. Deleta o token para que não possa ser reutilizado
         reset_token.delete()
+
+class LogoutSerializer(serializers.Serializer):
+    """
+    Serializador para o endpoint de Logout (Sair).
+    Recebe o refresh token para colocá-lo na blacklist.
+    """
+    refresh = serializers.CharField()
+
+    default_error_messages = {
+        'bad_token': ('Token inválido ou expirado')
+    }
+
+    def validate(self, attrs):
+        self.token = attrs['refresh']
+        return attrs
+
+    def save(self, **kwargs):
+        # O 'save' aqui é onde a mágica acontece.
+        # Nós pegamos o token e o adicionamos à blacklist.
+        try:
+            RefreshToken(self.token).blacklist()
+        except TokenError:
+            # Se o token já for inválido, expirado ou adulterado,
+            # o .blacklist() dará um erro. Nós o "ignoramos",
+            # pois o usuário já está efetivamente deslogado.
+            self.fail('bad_token')
