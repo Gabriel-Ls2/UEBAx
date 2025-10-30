@@ -131,3 +131,4 @@ REST_FRAMEWORK = {
 }
 
 AUTH_USER_MODEL = 'core.Usuario'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

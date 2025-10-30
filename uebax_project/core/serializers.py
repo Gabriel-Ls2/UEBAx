@@ -44,3 +44,19 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         # Como 'validated_data' já está limpo (sem password2),
         # podemos passá-lo diretamente para nosso novo create_user.
         return Usuario.objects.create_user(**validated_data)
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """
+    Serializador para a Tela 3 ("Esqueci a Senha").
+    Apenas valida se o email existe.
+    """
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        # Verifica se existe um usuário com este e-mail
+        try:
+            Usuario.objects.get(email=value)
+        except Usuario.DoesNotExist:
+            # Exatamente a mensagem de erro que você especificou
+            raise serializers.ValidationError("E-mail Inválido")
+        return value
