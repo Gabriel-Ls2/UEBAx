@@ -1,30 +1,73 @@
 import random
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser,BaseUserManager, AbstractBaseUser, PermissionsMixin
 from django.utils import timezone
 from datetime import timedelta
 
 # --- Modelos de Autenticação e Usuário ---
+class CustomUserManager(BaseUserManager):
+    """
+    Gerenciador de usuário customizado onde o email é o identificador único
+    em vez do username.
+    """
+    def create_user(self, email, password, **extra_fields):
+        """
+        Cria e salva um Usuário com o email e senha fornecidos.
+        """
+        if not email:
+            raise ValueError('O Email é obrigatório')
+        
+        email = self.normalize_email(email)
+        
+        # Pega os campos do seu modelo (nome_completo, cpf)
+        # dos extra_fields para criar o usuário
+        usuario = self.model(email=email, **extra_fields)
+        
+        usuario.set_password(password) # Criptografa a senha
+        usuario.save(using=self._db)
+        return usuario
 
-class Usuario(AbstractUser):
+    def create_superuser(self, email, password, **extra_fields):
+        """
+        Cria e salva um Superusuário com o email e senha fornecidos.
+        """
+        # Define os padrões para um superusuário
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superusuário deve ter is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superusuário deve ter is_superuser=True.')
+        
+        # Chama o create_user normal
+        return self.create_user(email, password, **extra_fields)
+
+class Usuario(AbstractBaseUser, PermissionsMixin):
     """
-    Modelo de usuário customizado.
-    Estendemos o AbstractUser do Django para já ter senha, email, etc.
-    Trocamos o login de 'username' para 'email'.
+    Modelo de usuário customizado usando AbstractBaseUser.
     """
-    # Removemos o username, já que usaremos o email
-    username = None 
-    
     # Campos da sua especificação
     nome_completo = models.CharField(max_length=255)
-    cpf = models.CharField(max_length=11, unique=True) # Idealmente, adicione um validador para CPF
+    cpf = models.CharField(max_length=11, unique=True)
     email = models.EmailField(unique=True, blank=False)
 
-    # Dizemos ao Django que o campo 'email' será usado para login
+    # Campos que o AbstractUser fornecia e que agora precisamos
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    date_joined = models.DateTimeField(default=timezone.now)
+
+    # --- Configuração Principal ---
+    
+    # Diz ao Django que o campo 'email' será usado para login
     USERNAME_FIELD = 'email'
     
-    # Campos obrigatórios ao criar um superusuário
+    # Campos obrigatórios ao criar um superusuário (além de email e senha)
     REQUIRED_FIELDS = ['nome_completo', 'cpf']
+
+    # Diz ao Django para usar nosso gerenciador customizado
+    objects = CustomUserManager() 
 
     def __str__(self):
         return self.email

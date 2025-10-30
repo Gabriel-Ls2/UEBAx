@@ -4,57 +4,43 @@ from .models import Usuario
 from django.contrib.auth.password_validation import validate_password
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    """
-    Serializador para o registro de novos usuários.
-    """
     
-    # Adicionamos um campo 'password2' que não existe no modelo,
-    # ele servirá apenas para a validação da "Confirmação de Senha".
     password2 = serializers.CharField(style={'input_type': 'password'}, write_only=True)
 
     class Meta:
         model = Usuario
-        # Campos que esperamos receber do frontend
+        # Os campos são os mesmos
         fields = ['nome_completo', 'cpf', 'email', 'password', 'password2']
         extra_kwargs = {
-            # 'password' será apenas para escrita (não será retornado na resposta)
             'password': {'write_only': True}
         }
 
     def validate(self, data):
         """
-        Validação customizada para checar se as senhas coincidem.
+        Validação customizada para checar senhas e força.
         """
         password = data.get('password')
-        password2 = data.get('password2')
+        # Pega o 'password2' e já o remove do 'data'
+        password2 = data.pop('password2')
 
         if password != password2:
-            # Exatamente a mensagem de erro que você especificou!
             raise serializers.ValidationError("As senhas não coincidem")
-
-        # Valida a força da senha (mínimo 8 dígitos, etc.)
-        # Você pode configurar as regras no settings.py do Django
+        
         try:
-            validate_password(password, user=Usuario(**data))
+            # Valida a senha (força, comprimento, etc.) sem
+            # precisar de um objeto de usuário.
+            validate_password(password, user=None)
         except serializers.ValidationError as e:
+            # O 'list(e.messages)' é ótimo para retornar um JSON de erros
             raise serializers.ValidationError(list(e.messages))
         
-        # Remove o campo 'password2' pois ele não faz parte do modelo Usuario
-        data.pop('password2')
+        # Retorna 'data' limpo (sem password2)
         return data
 
     def create(self, validated_data):
         """
-        Cria e retorna um novo usuário com uma senha HASHED (criptografada).
+        Chama o nosso CustomUserManager.create_user()
         """
-        # Usamos create_user() em vez de create() para garantir
-        # que a senha seja salva corretamente (com hash).
-        usuario = Usuario.objects.create_user(
-            email=validated_data['email'],
-            nome_completo=validated_data['nome_completo'],
-            cpf=validated_data['cpf'],
-            password=validated_data['password']
-            # Note que 'username' não é necessário se você configurou
-            # USERNAME_FIELD = 'email' no seu models.py
-        )
-        return usuario
+        # Como 'validated_data' já está limpo (sem password2),
+        # podemos passá-lo diretamente para nosso novo create_user.
+        return Usuario.objects.create_user(**validated_data)
