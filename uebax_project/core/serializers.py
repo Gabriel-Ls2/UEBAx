@@ -1,6 +1,6 @@
 # Em: core/serializers.py
 from rest_framework import serializers
-from .models import Usuario
+from .models import Usuario, ResetPasswordToken
 from django.contrib.auth.password_validation import validate_password
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -60,3 +60,38 @@ class PasswordResetRequestSerializer(serializers.Serializer):
             # Exatamente a mensagem de erro que você especificou
             raise serializers.ValidationError("E-mail Inválido")
         return value
+
+class PasswordResetVerifySerializer(serializers.Serializer):
+    """
+    Serializador para a "Tela de Verificação de Código" (Tela 4).
+    Valida o email e o token de 6 dígitos.
+    """
+    email = serializers.EmailField()
+    token = serializers.CharField(max_length=6, min_length=6)
+
+    def validate(self, data):
+        email = data.get('email')
+        token = data.get('token')
+
+        try:
+            # 1. Tenta encontrar o usuário pelo e-mail
+            usuario = Usuario.objects.get(email=email)
+        except Usuario.DoesNotExist:
+            raise serializers.ValidationError("Token Inválido") # Ou "Usuário não encontrado"
+
+        try:
+            # 2. Tenta encontrar o token associado a esse usuário
+            reset_token = ResetPasswordToken.objects.get(usuario=usuario, token=token)
+        except ResetPasswordToken.DoesNotExist:
+            # Sua mensagem de erro da especificação
+            raise serializers.ValidationError("Token Inválido")
+
+        # 3. Verifica se o token expirou (usando o método do models.py)
+        if reset_token.is_expired():
+            # Sua mensagem de erro da especificação
+            raise serializers.ValidationError("Token Expirado")
+        
+        # Se passou por tudo, anexa o usuário aos dados validados
+        # Isso será útil no próximo passo (Tela 5)
+        data['usuario'] = usuario
+        return data

@@ -73,21 +73,26 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 class ResetPasswordToken(models.Model):
-    """
-    Modelo para guardar o token de 6 dígitos da redefinição de senha.
-    """
     usuario = models.OneToOneField(Usuario, on_delete=models.CASCADE)
     token = models.CharField(max_length=6)
-    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # MUDANÇA 1: Trocamos 'auto_now_add=True' por 'default=timezone.now'
+    # Isso nos permite atualizar o campo manualmente.
+    created_at = models.DateTimeField(default=timezone.now)
 
     def save(self, *args, **kwargs):
-        # Gera um token de 6 dígitos antes de salvar
-        if not self.token:
-            self.token = str(random.randint(100000, 999999))
-        super().save(*args, **kwargs)
+        # MUDANÇA 2: Removemos o 'if'.
+        # Geramos um novo token TODA VEZ que o objeto for salvo.
+        self.token = str(random.randint(100000, 999999))
+        
+        # MUDANÇA 3: Atualizamos o timestamp para o "agora"
+        # Isso reinicia o timer de 5 minutos a cada novo pedido.
+        self.created_at = timezone.now()
+        
+        super().save(*args, **kwargs) # Salva o novo token e o novo timestamp
 
     def is_expired(self):
-        # Verifica se o token tem mais de 5 minutos
+        # Esta lógica continua perfeita
         return timezone.now() > self.created_at + timedelta(minutes=5)
 
     def __str__(self):

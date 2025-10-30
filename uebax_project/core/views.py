@@ -3,7 +3,7 @@ from django.shortcuts import render
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from .serializers import UserRegistrationSerializer, PasswordResetRequestSerializer
+from .serializers import UserRegistrationSerializer, PasswordResetRequestSerializer, PasswordResetVerifySerializer
 from .models import Usuario, ResetPasswordToken
 from django.core.mail import send_mail
 from django.conf import settings
@@ -43,7 +43,7 @@ class UserRegistrationView(generics.CreateAPIView):
 class PasswordResetRequestView(generics.GenericAPIView):
     """
     View para a "Tela de Redefinição de Senha" (Tela 3).
-    Recebe um e-mail e envia um token de 6 dígitos.
+    (VERSÃO CORRIGIDA)
     """
     serializer_class = PasswordResetRequestSerializer
     permission_classes = [AllowAny]
@@ -51,37 +51,64 @@ class PasswordResetRequestView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         
-        # O 'is_valid' vai rodar o 'validate_email'
         if serializer.is_valid():
             email = serializer.validated_data['email']
             usuario = Usuario.objects.get(email=email)
             
-            # Cria ou obtém o token. O modelo cuida da geração dos 6 dígitos.
-            # O 'defaults' garante que, se um token antigo existir,
-            # ele seja atualizado com um novo código e 'created_at'.
-            token, created = ResetPasswordToken.objects.update_or_create(
-                usuario=usuario,
-                defaults={'usuario': usuario}
-            )
+            # --- LÓGICA CORRIGIDA AQUI ---
+            
+            # 1. Usamos get_or_create. Ele retorna o token (antigo)
+            #    ou cria um novo (com um token inicial).
+            token, created = ResetPasswordToken.objects.get_or_create(usuario=usuario)
+            
+            # 2. AGORA, nós manualmente chamamos .save().
+            #    Isso vai FORÇAR a execução do nosso método save() no models.py.
+            #    O método vai gerar um NOVO token e reiniciar o timer.
+            token.save()
+            
+            # 3. Agora, a variável 'token' na nossa mão (em 'token.token')
+            #    tem o MESMO valor que foi salvo no banco, pois o
+            #    .save() atualizou o objeto 'self.token'.
+            
+            # --- Fim da Lógica Corrigida ---
 
-            # --- Lógica de Envio de E-mail ---
+            # Lógica de Envio de E-mail (agora com o token correto)
             subject = 'Seu código de redefinição de senha do UEBAX'
             message = f'Olá, {usuario.nome_completo}!\n\n' \
                       f'Seu token de redefinição de senha é: {token.token}\n\n' \
                       f'Este token expira em 5 minutos.\n' \
                       f'Se você não solicitou isso, ignore este e-mail.'
             
-            from_email = settings.DEFAULT_FROM_EMAIL # Ou 'nao-responda@uebax.com'
+            from_email = settings.DEFAULT_FROM_EMAIL
             recipient_list = [usuario.email]
             
-            # Envia o e-mail (que aparecerá no console)
             send_mail(subject, message, from_email, recipient_list)
-            # ---------------------------------
             
             return Response(
                 {"message": "Token enviado para o seu e-mail com sucesso!"},
                 status=status.HTTP_200_OK
             )
         
-        # Se não for válido, retorna o erro "E-mail Inválido"
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PasswordResetVerifyView(generics.GenericAPIView):
+    """
+    View para a "Tela de Verificação de Código" (Tela 4).
+    Verifica se o token é válido e não expirou.
+    """
+    serializer_class = PasswordResetVerifySerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        
+        # 'is_valid' vai rodar toda a lógica do 'validate'
+        if serializer.is_valid():
+            # Sua mensagem de sucesso da especificação
+            return Response(
+                {"message": "Token Confirmado"},
+                status=status.HTTP_200_OK
+            )
+        
+        # Se não for válido, retorna o erro (Ex: "Token Inválido", "Token Expirado")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
