@@ -95,3 +95,69 @@ class PasswordResetVerifySerializer(serializers.Serializer):
         # Isso será útil no próximo passo (Tela 5)
         data['usuario'] = usuario
         return data
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """
+    Serializador para a "Tela de Nova Senha" (Tela 5).
+    Recebe email, token, e a nova senha.
+    """
+    email = serializers.EmailField()
+    token = serializers.CharField(max_length=6, min_length=6)
+    password = serializers.CharField(
+        style={'input_type': 'password'}, 
+        write_only=True, 
+        min_length=8
+    )
+    password2 = serializers.CharField(
+        style={'input_type': 'password'}, 
+        write_only=True
+    )
+
+    def validate(self, data):
+        # --- 1. Validação das Senhas ---
+        # (Lógica da sua especificação e do serializer de registro)
+        password = data.get('password')
+        password2 = data.get('password2')
+
+        if password != password2:
+            raise serializers.ValidationError({"password": "As senhas não coincidem"})
+
+        # Valida a força da senha
+        try:
+            validate_password(password, user=None)
+        except serializers.ValidationError as e:
+            raise serializers.ValidationError({"password": list(e.messages)})
+
+        # --- 2. Re-validação do Token ---
+        # (Lógica do serializer anterior)
+        try:
+            usuario = Usuario.objects.get(email=data.get('email'))
+            reset_token = ResetPasswordToken.objects.get(
+                usuario=usuario, 
+                token=data.get('token')
+            )
+        except (Usuario.DoesNotExist, ResetPasswordToken.DoesNotExist):
+            raise serializers.ValidationError({"token": "Token Inválido"})
+
+        if reset_token.is_expired():
+            raise serializers.ValidationError({"token": "Token Expirado"})
+        
+        # Anexa o usuário e o token aos dados validados
+        data['usuario'] = usuario
+        data['reset_token'] = reset_token
+        return data
+
+    def save(self):
+        """
+        Salva a nova senha do usuário e deleta o token.
+        """
+        usuario = self.validated_data['usuario']
+        reset_token = self.validated_data['reset_token']
+        password = self.validated_data['password']
+
+        # 1. Define a nova senha (o 'set_password' cuida da criptografia)
+        usuario.set_password(password)
+        usuario.save()
+
+        # 2. Deleta o token para que não possa ser reutilizado
+        reset_token.delete()

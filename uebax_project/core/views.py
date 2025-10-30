@@ -3,7 +3,7 @@ from django.shortcuts import render
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from .serializers import UserRegistrationSerializer, PasswordResetRequestSerializer, PasswordResetVerifySerializer
+from .serializers import UserRegistrationSerializer, PasswordResetRequestSerializer, PasswordResetVerifySerializer, PasswordResetConfirmSerializer
 from .models import Usuario, ResetPasswordToken
 from django.core.mail import send_mail
 from django.conf import settings
@@ -111,4 +111,28 @@ class PasswordResetVerifyView(generics.GenericAPIView):
             )
         
         # Se não for válido, retorna o erro (Ex: "Token Inválido", "Token Expirado")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PasswordResetConfirmView(generics.GenericAPIView):
+    """
+    View para a "Tela de Nova Senha" (Tela 5).
+    Finalmente, atualiza a senha do usuário.
+    """
+    serializer_class = PasswordResetConfirmSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        
+        if serializer.is_valid():
+            # Chama o nosso método .save() customizado no serializer
+            serializer.save() 
+            
+            # Sua mensagem de sucesso da especificação
+            return Response(
+                {"message": "Sua senha foi redefinida com sucesso!"},
+                status=status.HTTP_200_OK
+            )
+        
+        # Retorna erros (Ex: "Token Inválido", "As senhas não coincidem", etc.)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
