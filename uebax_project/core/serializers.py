@@ -1,10 +1,9 @@
 from rest_framework import serializers
-from .models import Usuario, ResetPasswordToken
+from .models import Usuario, ResetPasswordToken, Evento, Alerta
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .utils import log_event
-from .models import Evento
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     
@@ -224,3 +223,38 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         # 3. Retorna os tokens para o usuário, como de costume
         return data
+    
+class AlertaSerializer(serializers.ModelSerializer):
+    """
+    Serializador para a "Tabela de Alertas".
+    """
+    # Em vez de mostrar o ID do usuário, vamos mostrar seu email
+    usuario_email = serializers.ReadOnlyField(source='usuario.email')
+    
+    # Formata o timestamp para ficar mais legível (Data e Hora)
+    data = serializers.DateTimeField(source='timestamp', format='%d/%m/%Y')
+    horario = serializers.DateTimeField(source='timestamp', format='%H:%M')
+    # Pega o nome "legível" do tipo de alerta (ex: "Acesso fora do horário")
+    descricao = serializers.CharField(source='get_tipo_alerta_display')
+
+    class Meta:
+        model = Alerta
+        # Campos exatos que você especificou na "Tela de Alertas"
+        fields = ['descricao', 'usuario_email', 'data', 'horario']
+
+
+class EventoSerializer(serializers.ModelSerializer):
+    """
+    Serializador para a "Tabela de Eventos".
+    """
+    # Em vez de mostrar o ID do usuário, vamos mostrar seu email
+    usuario_email = serializers.ReadOnlyField(source='usuario.email')
+    
+    # Pega o nome "legível" do tipo de evento (ex: "Login")
+    evento_desc = serializers.CharField(source='get_tipo_evento_display')
+    horario = serializers.DateTimeField(source='timestamp', format='%H:%M')
+
+    class Meta:
+        model = Evento
+        # Campos exatos da sua "Tela de Eventos"
+        fields = ['usuario_email', 'evento_desc', 'horario']

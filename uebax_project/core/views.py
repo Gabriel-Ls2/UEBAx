@@ -3,8 +3,8 @@ from django.shortcuts import render
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from .serializers import UserRegistrationSerializer, PasswordResetRequestSerializer, PasswordResetVerifySerializer, PasswordResetConfirmSerializer, LogoutSerializer, CustomTokenObtainPairSerializer
-from .models import Usuario, ResetPasswordToken
+from .serializers import UserRegistrationSerializer, PasswordResetRequestSerializer, PasswordResetVerifySerializer, PasswordResetConfirmSerializer, LogoutSerializer, CustomTokenObtainPairSerializer, AlertaSerializer, EventoSerializer
+from .models import Usuario, ResetPasswordToken, Evento, Alerta
 from django.core.mail import send_mail
 from django.conf import settings
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -171,3 +171,24 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     serializer customizado (que registra o log).
     """
     serializer_class = CustomTokenObtainPairSerializer
+
+class EventoListView(generics.ListAPIView):
+    """
+    Endpoint para a "Tabela de Eventos" (Tela 6).
+    Retorna uma lista de todos os eventos.
+    """
+    queryset = Evento.objects.all() # Pega todos os eventos
+    serializer_class = EventoSerializer
+
+    # O mais importante: SÓ usuários logados podem ver esta lista.
+    permission_classes = [IsAuthenticated]
+
+
+class AlertaListView(generics.ListAPIView):
+    """
+    Endpoint para a "Tabela de Alertas" (Tela 6).
+    Retorna uma lista de todos os alertas.
+    """
+    queryset = Alerta.objects.all() # Pega todos os alertas
+    serializer_class = AlertaSerializer
+    permission_classes = [IsAuthenticated]
