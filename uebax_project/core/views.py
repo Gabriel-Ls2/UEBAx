@@ -227,7 +227,7 @@ class DashboardStatsView(APIView):
         ).values('usuario').distinct().count() # 'distinct' garante que só contamos cada usuário 1 vez
 
         # Card 4: "Último evento"
-        ultimo_evento_obj = Evento.objects.order_by('-timestamp').first()
+        ultimo_evento_obj = Evento.objects.filter(timestamp__date=hoje).order_by('-timestamp').first()
         ultimo_evento_str = "Nenhum evento registrado"
         if ultimo_evento_obj:
             # Formata a string (ex: "Login às 15:30")
