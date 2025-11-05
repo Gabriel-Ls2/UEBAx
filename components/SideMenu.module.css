@@ -1,0 +1,91 @@
+.menu {
+  width: 240px;
+  height: 100vh; /* Altura total da tela */
+  background-color: #f1e4ff; /* Roxo-lavanda claro do design */
+  display: flex;
+  flex-direction: column;
+  padding: 25px;
+  box-sizing: border-box;
+  position: fixed; /* Fixo na esquerda */
+  left: 0;
+  top: 0;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 50px;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+}
+
+.logoText {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.navList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1; /* Empurra o "Sair" para baixo */
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 20px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-weight: 500;
+  color: #5c4a8f; /* Roxo escuro para o texto */
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.navItem:hover {
+  background-color: #e0c8ff;
+}
+
+/* O item "ativo" */
+.navItem.active {
+  background-color: #fff;
+  color: #5c4a8f;
+  box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.1);
+}
+
+.navItem svg {
+  font-size: 1.3rem;
+}
+
+.footer {
+  margin-top: auto; /* Empurra a si mesmo para o fim */
+}
+
+.logoutButton {
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  padding: 15px 20px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #777;
+  cursor: pointer;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.logoutButton:hover {
+  background-color: #e0c8ff;
+  color: #333;
+}

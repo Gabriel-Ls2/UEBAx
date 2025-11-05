@@ -1,0 +1,41 @@
+/* Define nossas cores de design */
+:root {
+  --primary-color: #d8a8d8; /* O roxo do botão */
+  --text-color: #333; /* Cor escura principal */
+  --text-color-secondary: #555;
+}
+
+.button {
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 50px; /* Pílula */
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Variante Primária (Botão Roxo) */
+.primary {
+  background-color: var(--primary-color);
+  color: white;
+  box-shadow: 0 4px 15px -5px rgba(216, 168, 216, 0.7);
+}
+
+.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px -5px rgba(216, 168, 216, 1);
+}
+
+/* Variante de Texto (Links) */
+.text {
+  background-color: transparent;
+  color: var(--text-color);
+  box-shadow: none;
+  padding: 10px; /* Menos preenchimento */
+}
+
+.text:hover {
+  color: var(--primary-color);
+}

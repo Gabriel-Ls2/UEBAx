@@ -1,0 +1,47 @@
+.tableContainer {
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 15px 30px 30px 30px;
+  box-shadow: 0 6px 20px -5px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f0f0f0;
+  box-sizing: border-box;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse; /* Tira as bordas duplas */
+}
+
+.table th,
+.table td {
+  padding: 16px 10px;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0; /* Linha separadora suave */
+}
+
+/* Cabeçalho (Usuário, Evento, Horário) */
+.table th {
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+/* Células de dados */
+.table td {
+  font-size: 1rem;
+  color: #555;
+  font-weight: 500;
+}
+
+/* Remove a borda da última linha */
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.emptyText {
+  font-size: 1rem;
+  color: #888;
+  text-align: center;
+  padding: 40px 0;
+}

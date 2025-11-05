@@ -206,6 +206,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
 
     def validate(self, attrs):
+        print("\n" + "="*30)
+        print("DEBUG: CustomTokenObtainPairSerializer FOI ATIVADO!")
         # 'validate' é chamado DEPOIS que o simple-jwt
         # já validou que o email e a senha estão corretos.
 
@@ -216,11 +218,17 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         #    e chama nosso "Motor de Eventos"
         #    O 'self.user' é magicamente definido pelo 'super().validate()'
         if self.user:
+            print(f"DEBUG: Utilizador '{self.user.email}' validado. A chamar o log_event...")
             log_event(
                 usuario=self.user,
                 tipo_evento=Evento.TipoEvento.LOGIN
             )
-
+        else:
+            # --- INÍCIO DO TESTE DE DEBUG ---
+            print("DEBUG: ERRO! O 'self.user' não foi definido após a validação.")
+            # --- FIM DO TESTE DE DEBUG ---
+        
+        print("="*30 + "\n")
         # 3. Retorna os tokens para o usuário, como de costume
         return data
     

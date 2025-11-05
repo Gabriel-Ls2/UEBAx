@@ -1,0 +1,106 @@
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #f9f8ff; /* Fundo lavanda bem claro */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.logoPlaceholder {
+  font-size: 5rem; /* Apenas para simular o logo */
+  margin-bottom: 40px;
+  color: #5c4a8f; /* Um roxo mais escuro para o logo */
+}
+
+.loginForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 380px; /* Define uma largura máxima para o form */
+}
+
+.forgotLink {
+  align-self: flex-end; /* Alinha "Esqueci a senha" à direita */
+  margin-top: -15px; /* Puxa para cima, perto do input */
+  margin-bottom: 25px;
+  font-size: 0.9rem;
+  color: #555;
+  text-decoration: none;
+}
+
+.forgotLink:hover {
+  text-decoration: underline;
+}
+
+.separator {
+  margin: 15px 0;
+  color: #999;
+  font-weight: bold;
+}
+
+.logo {
+  width: 100px; 
+  height: 100px; 
+  margin-bottom: 40px;
+  object-fit: contain;
+}
+
+.errorPopup {
+  width: 100%;
+  padding: 12px;
+  background-color: #ffdce0; /* Um fundo vermelho claro */
+  border: 1px solid #ff9aa2;
+  border-radius: 8px;
+  color: #a30010; /* Texto vermelho escuro */
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+  box-sizing: border-box; /* Garante que o padding não quebre o layout */
+}
+
+/* ... (todos os estilos do .loginForm, .errorPopup, etc.) ... */
+
+.pageTitleBar {
+  width: 100%;
+  max-width: 380px;
+  background-color: #d8a8d8; /* O roxo primário */
+  color: white;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 25px;
+  box-sizing: border-box;
+}
+
+.successPopup {
+  width: 100%;
+  padding: 12px;
+  background-color: #e8f5e9; /* Fundo verde-claro */
+  border: 1px solid #a5d6a7;
+  border-radius: 8px;
+  color: #2e7d32; /* Texto verde-escuro */
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.authTitle {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 10px 0;
+}
+
+.authSubtitle {
+  font-size: 1rem;
+  color: #555;
+  margin: 0 0 25px 0;
+}

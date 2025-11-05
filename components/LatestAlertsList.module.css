@@ -1,0 +1,45 @@
+.listContainer {
+  /* Não precisa de muito estilo, o container pai já dá o fundo branco */
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.listItem {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 0; /* Espaço entre os itens */
+  border-bottom: 1px solid #f0f0f0; /* Linha separadora */
+}
+.listItem:last-child {
+  border-bottom: none; /* Remove a linha do último item */
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #ffebee; /* Fundo vermelho-claro para o ícone */
+  color: #c62828; /* Ícone vermelho-escuro */
+  flex-shrink: 0; /* Impede o ícone de encolher */
+}
+
+.description {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.emptyText {
+  font-size: 0.9rem;
+  color: #888;
+  text-align: center;
+  padding: 20px 0;
+}

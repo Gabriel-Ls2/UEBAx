@@ -1,0 +1,26 @@
+.card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 25px 20px;
+  /* A sombra suave do seu design */
+  box-shadow: 0 6px 20px -5px rgba(0, 0, 0, 0.06);
+  text-align: center;
+  border: 1px solid #f0f0f0;
+}
+
+.value {
+  display: block;
+  font-size: 2.2rem; /* Tamanho do número grande */
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+  
+  /* Faz o card crescer para caber o texto (ex: "11:10") */
+  line-height: 1.2; 
+}
+
+.title {
+  font-size: 0.9rem;
+  color: #888; /* Cor cinza para o texto pequeno */
+  font-weight: 500;
+}

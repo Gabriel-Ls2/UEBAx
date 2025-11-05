@@ -1,0 +1,64 @@
+/* Cores do Input */
+:root {
+  --input-bg: #eceae8;
+  --icon-color: #a0a0a0;
+  --label-color: #555;
+  --hint-color: #777;
+}
+
+.inputWrapper {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.labelContainer {
+  display: flex;
+  justify-content: space-between; /* Alinha o label e o hint */
+  align-items: baseline;
+  margin-bottom: 8px;
+  padding: 0 5px;
+}
+
+.label {
+  font-weight: bold;
+  color: var(--label-color);
+  font-size: 0.9rem;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: var(--hint-color);
+}
+
+.inputContainer {
+  position: relative; /* Contexto para o ícone */
+}
+
+.icon {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--icon-color);
+  font-size: 1.1rem; /* Tamanho do ícone */
+}
+
+.input {
+  width: 100%;
+  background-color: var(--input-bg);
+  border: none;
+  border-radius: 12px;
+  padding: 18px 20px 18px 55px; /* Preenchimento à esquerda para o ícone */
+  font-size: 1rem;
+  box-sizing: border-box; /* Garante que o padding não quebre o layout */
+}
+
+.input:focus {
+  outline: 2px solid #d8a8d8; /* Destaque roxo ao focar */
+}
+
+.requiredStar {
+  color: #5c4a8f; /* O seu tom de roxo */
+  font-weight: bold;
+  margin-left: 2px;
+}

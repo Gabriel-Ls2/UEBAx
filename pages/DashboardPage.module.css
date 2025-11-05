@@ -1,0 +1,73 @@
+/* Este é o "molde" principal do dashboard */
+.pageWrapper {
+  display: grid;
+  /* O seu design tem 3 "colunas": 
+    - O gráfico (grande)
+    - A lista de alertas (pequena)
+    
+    Vamos usar 'fr' (frações) para definir isto.
+    3fr = 75% da largura, 1fr = 25% da largura
+  */
+  grid-template-columns: 3fr 1fr;
+  grid-template-rows: auto auto auto; /* Linhas automáticas */
+  gap: 25px; /* Espaço entre todos os elementos */
+
+  /* Define as áreas do layout (como um mapa) */
+  grid-template-areas:
+    "stats stats"   /* Os 4 cards ocupam a linha inteira de cima */
+    "chart alerts"  /* O gráfico e a lista de alertas */
+    "table alerts"; /* A tabela de status e a lista de alertas */
+}
+
+/* --- Áreas da Grelha --- */
+
+.statsGrid {
+  grid-area: stats; /* Coloca isto na área "stats" */
+  display: grid;
+  /* Uma grelha de 4 colunas para os 4 cards */
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+}
+
+.chartContainer {
+  grid-area: chart; /* Coloca isto na área "chart" */
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 6px 20px -5px rgba(0, 0, 0, 0.06);
+}
+
+.tableContainer {
+  grid-area: table; /* Coloca isto na área "table" */
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 6px 20px -5px rgba(0, 0, 0, 0.06);
+}
+
+.alertsContainer {
+  grid-area: alerts; /* Coloca isto na área "alerts" */
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 6px 20px -5px rgba(0, 0, 0, 0.06);
+}
+
+/* --- Estilos dos Títulos --- */
+.sectionTitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+/* Estilo "feio" para vermos os dados que ainda não estilizámos */
+.rawJson {
+  background-color: #f4f4f4;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  max-height: 300px;
+  overflow-y: auto;
+}

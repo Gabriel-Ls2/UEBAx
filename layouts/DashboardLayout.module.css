@@ -1,0 +1,13 @@
+.layout {
+  display: flex;
+  background-color: #fafafa; /* Fundo do conteúdo */
+}
+
+.content {
+  /* O conteúdo começa 'depois' do menu (que tem 240px) */
+  margin-left: 240px; 
+  width: 100%;
+  min-height: 100vh;
+  padding: 30px;
+  box-sizing: border-box;
+}
