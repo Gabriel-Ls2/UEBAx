@@ -1,9 +1,3 @@
-# Created by https://www.toptal.com/developers/gitignore/api/venv
-# Edit at https://www.toptal.com/developers/gitignore?templates=venv
-
-### venv ###
-# Virtualenv
-# http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
 .Python
 [Bb]in
 [Ii]nclude
@@ -15,32 +9,21 @@ pyvenv.cfg
 .venv
 pip-selfcheck.json
 
-# End of https://www.toptal.com/developers/gitignore/api/venv
-
-# --- Node.js / React (Vite) ---
-# Ignora a biblioteca de 1865 ficheiros
 node_modules/
 
-# Ignora os ficheiros de 'build'
 dist/
 .vite/
 
-# Ignora ficheiros de ambiente (MUITO IMPORTANTE para senhas)
 .env
 .env.local
 
-# --- Python / Django ---
-# Ignora o ambiente virtual (se o tiver aqui)
 venv/
 env/
 
-# Ignora o seu ficheiro de base de dados
 db.sqlite3
 
-# Ignora os ficheiros 'compilados' do Python
 __pycache__/
 *.pyc
 
-# --- Ficheiros do SO (Sistema Operacional) ---
 .DS_Store
 Thumbs.db
