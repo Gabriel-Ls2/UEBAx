@@ -20,14 +20,16 @@ const DashboardPage = () => {
         setLoading(true);
         setError('');
 
-        const [statsData, alertsData] = await Promise.all([
+        const [statsData, allAlertsData] = await Promise.all([
           apiFetch('/dashboard/stats/'),
-          // Nota: O seu design mostra 3 alertas, vamos pedir 3
-          apiFetch('/alerts/?limit=3') 
+          apiFetch('/alerts/') 
         ]);
         
         setStats(statsData);
-        setAlerts(alertsData.results); // O DRF coloca os resultados em 'results'
+
+        const tresPrimeiros = (allAlertsData || []).slice(0, 8);
+        
+        setAlerts(tresPrimeiros); 
 
       } catch (err) {
         console.error("Erro ao buscar dados do dashboard:", err);
