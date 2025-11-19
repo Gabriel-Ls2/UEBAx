@@ -74,7 +74,7 @@ const LoginPage = () => {
 
         <FormInput
           label="USUÁRIO"
-          hint="(Apenas números)"
+          hint="(e-mail)"
           icon={<FaUser />}
           type="text" // Seu design pedia "Apenas números", mude para type="number" se preferir
           name="email"  // Mudei para 'email'
