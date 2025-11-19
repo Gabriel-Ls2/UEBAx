@@ -15,7 +15,6 @@ const CadastroPage = () => {
   // Estados para todos os campos do formulário
   const [formData, setFormData] = useState({
     nome_completo: '',
-    cpf: '',
     email: '',
     password: '',
     password2: '', // Para a "Confirmação de Senha"
@@ -88,15 +87,6 @@ const CadastroPage = () => {
           value={formData.nome_completo}
           onChange={handleChange}
           required={true} // <-- O nosso asterisco a funcionar!
-        />
-        <FormInput
-          label="CPF"
-          icon={<FaIdCard />} // Ícone de CPF
-          type="text" // Usar 'text' é melhor para máscaras de CPF
-          name="cpf"
-          value={formData.cpf}
-          onChange={handleChange}
-          required={true}
         />
         <FormInput
           label="E-Mail"
