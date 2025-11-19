@@ -11,6 +11,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from django.utils import timezone
 from django.db.models import Count
 from django.db.models.functions import ExtractHour
+from .utils import log_event
 
 class UserRegistrationView(generics.CreateAPIView):
     """
@@ -158,6 +159,11 @@ class LogoutView(generics.GenericAPIView):
         # Valida os dados (basicamente, checa se 'refresh' foi enviado)
         serializer.is_valid(raise_exception=True)
 
+        log_event(
+            usuario=request.user, 
+            tipo_evento=Evento.TipoEvento.LOGOUT
+        )
+
         # Chama o método .save() do nosso serializer (que faz o blacklist)
         serializer.save()
 
@@ -199,76 +205,63 @@ class AlertaListView(generics.ListAPIView):
 class DashboardStatsView(APIView):
     """
     Endpoint mestre para a tela principal do Dashboard.
-    Retorna os 4 cards, os dados do gráfico e a tabela de status.
+    (VERSÃO CORRIGIDA PARA FUSO HORÁRIO)
     """
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        # Define o "hoje"
-        hoje = timezone.now().date()
-
+        # 1. Pega o momento "agora" no fuso horário correto (São Paulo)
+        agora = timezone.localtime(timezone.now())
+        hoje = agora.date()
+        
         # --- 1. Cálculo dos 4 Cards ---
+        
+        # Filtramos tudo o que aconteceu "hoje" (no horário local)
+        eventos_hoje = Evento.objects.filter(timestamp__date=hoje)
+        alertas_hoje = Alerta.objects.filter(timestamp__date=hoje)
 
-        # Card 1: "Logins hoje"
-        logins_hoje = Evento.objects.filter(
-            tipo_evento=Evento.TipoEvento.LOGIN,
-            timestamp__date=hoje
-        ).count()
+        logins_hoje = eventos_hoje.filter(tipo_evento=Evento.TipoEvento.LOGIN).count()
+        
+        alertas_ativos = alertas_hoje.count()
 
-        # Card 2: "Alertas ativos" (vamos definir 'ativos' como 'criados hoje')
-        alertas_hoje = Alerta.objects.filter(
-            timestamp__date=hoje
-        ).count()
+        dispositivos_hoje = eventos_hoje.filter(
+            tipo_evento=Evento.TipoEvento.LOGIN
+        ).values('usuario').distinct().count()
 
-        # Card 3: "Dispositivos conectados" (vamos definir como 'usuários únicos que logaram hoje')
-        dispositivos_hoje = Evento.objects.filter(
-            tipo_evento=Evento.TipoEvento.LOGIN,
-            timestamp__date=hoje
-        ).values('usuario').distinct().count() # 'distinct' garante que só contamos cada usuário 1 vez
-
-        # Card 4: "Último evento"
-        ultimo_evento_obj = Evento.objects.filter(timestamp__date=hoje).order_by('-timestamp').first()
-        ultimo_evento_str = "Nenhum evento registrado"
+        # Pega o último evento (de hoje)
+        ultimo_evento_obj = eventos_hoje.order_by('-timestamp').first()
+        ultimo_evento_str = "Nenhum evento hoje"
+        
         if ultimo_evento_obj:
-            # Formata a string (ex: "Login às 15:30")
-            ultimo_evento_str = f"{ultimo_evento_obj.get_tipo_evento_display()} às {ultimo_evento_obj.timestamp.strftime('%H:%M')}"
+            # Converte a hora do evento para o fuso local antes de mostrar
+            hora_local = timezone.localtime(ultimo_evento_obj.timestamp)
+            ultimo_evento_str = f"{ultimo_evento_obj.get_tipo_evento_display()} às {hora_local.strftime('%H:%M')}"
 
         # --- 2. Dados do "Gráfico em Linha" (Logins por Hora) ---
-
-        # Agrupa os eventos de login de hoje por hora e conta quantos em cada hora
-        logins_por_hora_query = Evento.objects.filter(
-            tipo_evento=Evento.TipoEvento.LOGIN,
-            timestamp__date=hoje
-        ).annotate(
-            # Extrai a 'hora' do timestamp
-            hora=ExtractHour('timestamp')
-        ).values(
-            # Agrupa pela 'hora'
-            'hora'
-        ).annotate(
-            # Conta quantos eventos (logins) em cada grupo
-            total=Count('id')
-        ).order_by('hora') # Ordena por hora (0, 1, 2...)
-
-        # Prepara o array final para o gráfico (o frontend vai adorar isso)
-        # Cria uma lista com 24 zeros (um para cada hora do dia)
-        logins_por_hora_dados = [0] * 24 
-        for item in logins_por_hora_query:
-            # Substitui o zero pela contagem real na posição da hora
-            logins_por_hora_dados[item['hora']] = item['total']
-
+        
+        # Em vez de usar 'ExtractHour' (que falha no SQLite com Timezone),
+        # vamos pegar os eventos e processar no Python.
+        
+        # Pega todos os logins de hoje
+        logins_obj = eventos_hoje.filter(tipo_evento=Evento.TipoEvento.LOGIN)
+        
+        # Cria a lista de 24 horas zerada
+        logins_por_hora_dados = [0] * 24
+        
+        for evento in logins_obj:
+            # Converte para horário local e extrai a hora (0-23)
+            hora = timezone.localtime(evento.timestamp).hour
+            logins_por_hora_dados[hora] += 1
 
         # --- 3. Tabela de "Status de Conexão" ---
-
-        # Pega os IDs de todos os usuários que logaram hoje
-        usuarios_ativos_ids = Evento.objects.filter(
-            tipo_evento=Evento.TipoEvento.LOGIN,
-            timestamp__date=hoje
+        
+        usuarios_ativos_ids = eventos_hoje.filter(
+            tipo_evento=Evento.TipoEvento.LOGIN
         ).values_list('usuario__id', flat=True).distinct()
-
+        
         status_conexao = []
         todos_usuarios = Usuario.objects.all()
-
+        
         for usuario in todos_usuarios:
             user_status = "Ativo" if usuario.id in usuarios_ativos_ids else "Inativo"
             status_conexao.append({
@@ -277,20 +270,19 @@ class DashboardStatsView(APIView):
             })
 
         # --- 4. Monta a Resposta Final ---
-
+        
         data = {
             "cards": {
                 "logins_hoje": logins_hoje,
-                "alertas_ativos": alertas_hoje,
+                "alertas_ativos": alertas_ativos,
                 "dispositivos_conectados": dispositivos_hoje,
                 "ultimo_evento": ultimo_evento_str
             },
             "grafico_logins_por_hora": {
-                # Envia as "etiquetas" (labels) e os "dados" (data)
-                "labels": list(range(24)), # [0, 1, 2, ... 23]
-                "data": logins_por_hora_dados # [0, 0, 0, 1, 5, 2, ...]
+                "labels": list(range(24)),
+                "data": logins_por_hora_dados
             },
             "tabela_status_conexao": status_conexao
         }
-
+        
         return Response(data, status=status.HTTP_200_OK)

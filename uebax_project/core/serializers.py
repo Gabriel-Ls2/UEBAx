@@ -192,44 +192,44 @@ class LogoutSerializer(serializers.Serializer):
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     """
-    Serializer de Login customizado para registrar o evento de login.
+    Serializer de Login (Versão E-mail).
+    Usa o padrão do Django (email/senha) e registra os eventos.
     """
-
+    
     @classmethod
     def get_token(cls, user):
-        # Este método já existe, nós apenas o chamamos
         token = super().get_token(user)
-
-        # Você pode adicionar "payloads" customizados ao token aqui, se quiser
-        # ex: token['nome_completo'] = user.nome_completo
-
         return token
 
     def validate(self, attrs):
-        print("\n" + "="*30)
-        print("DEBUG: CustomTokenObtainPairSerializer FOI ATIVADO!")
-        # 'validate' é chamado DEPOIS que o simple-jwt
-        # já validou que o email e a senha estão corretos.
+        # Tenta autenticar usando o padrão (Email e Senha)
+        try:
+            data = super().validate(attrs)
+        except Exception as e:
+            # --- LOG DE FALHA ---
+            # Se o login falhar, tentamos achar o usuário pelo email para registrar a falha
+            email_tentado = attrs.get('email')
+            if email_tentado:
+                try:
+                    usuario = Usuario.objects.get(email=email_tentado)
+                    log_event(
+                        usuario=usuario,
+                        tipo_evento=Evento.TipoEvento.FALHA_LOGIN,
+                        descricao="Tentativa de login com senha incorreta."
+                    )
+                except Usuario.DoesNotExist:
+                    # Se o e-mail nem existe, não logamos evento de usuário
+                    pass
+            # Re-lançamos o erro para o frontend receber o "Não autorizado"
+            raise e
 
-        # 1. Roda a validação padrão (que nos dá os tokens 'access' e 'refresh')
-        data = super().validate(attrs)
-
-        # 2. Pega o usuário que acabou de ser validado (self.user)
-        #    e chama nosso "Motor de Eventos"
-        #    O 'self.user' é magicamente definido pelo 'super().validate()'
-        if self.user:
-            print(f"DEBUG: Utilizador '{self.user.email}' validado. A chamar o log_event...")
-            log_event(
-                usuario=self.user,
-                tipo_evento=Evento.TipoEvento.LOGIN
-            )
-        else:
-            # --- INÍCIO DO TESTE DE DEBUG ---
-            print("DEBUG: ERRO! O 'self.user' não foi definido após a validação.")
-            # --- FIM DO TESTE DE DEBUG ---
+        # --- LOG DE SUCESSO ---
+        # Se chegou aqui, a senha está correta e self.user está preenchido
+        log_event(
+            usuario=self.user,
+            tipo_evento=Evento.TipoEvento.LOGIN
+        )
         
-        print("="*30 + "\n")
-        # 3. Retorna os tokens para o usuário, como de costume
         return data
     
 class AlertaSerializer(serializers.ModelSerializer):
